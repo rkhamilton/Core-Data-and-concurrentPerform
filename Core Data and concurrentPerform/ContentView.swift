@@ -120,10 +120,11 @@ struct ContentView: View {
 
     private var resultsView: some View {
         VStack(alignment: .leading) {
-            Text("Serial Function with Double \(viewModel.serialUsingDouble) ms")
-            Text("Serial Function with Core Data \(viewModel.serialUsingCoreData) ms")
-            Text("Concurrent Perform with Double \(viewModel.concurrentPerformUsingDouble) ms")
-            Text("Concurrent Perform with Core Data \(viewModel.concurrentPerformUsingCoreData) ms")
+            Text("Serial Double \(viewModel.serialUsingDouble) ms \(viewModel.serialUsingDoubleValue)")
+            Text("Serial Core Data \(viewModel.serialUsingCoreData) ms \(viewModel.serialUsingCoreDataValue)")
+            Text("Concurrent Double \(viewModel.concurrentPerformUsingDouble) ms \(viewModel.concurrentPerformUsingDoubleValue)")
+            Text("Concurrent Core Data \(viewModel.concurrentPerformUsingCoreData) ms \(viewModel.concurrentPerformUsingCoreDataValue)")
+            
         }
     }
 }
