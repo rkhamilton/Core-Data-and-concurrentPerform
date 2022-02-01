@@ -10,43 +10,53 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    let persistenceController: PersistenceController
+    @ObservedObject var viewModel: ViewModel
 
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Item.valueMO, ascending: true)],
         animation: .default)
     private var items: FetchedResults<Item>
 
     var body: some View {
-        NavigationView {
+         ScrollView {
             List {
                 ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
-                    }
+                    Text("\(item.valueMO, specifier: "%.2f")")
                 }
                 .onDelete(perform: deleteItems)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
+            .frame(width: 300, height: 300, alignment: .leading)
+            .padding()
+            resultsView
+                .padding()
+            Button(role: .none) {
+                addItem()
+            } label: {
+                Text("Add 10 Items to Calculate")
             }
-            Text("Select an item")
+            .buttonStyle(.automatic)
+            .padding()
+            Button(role: .none) {
+                viewModel.calculateSerialUsingArray(items.map {$0})
+                viewModel.calculateConcurrentPerformUsingArray(items.map {$0})
+                viewModel.calculateSerialUsingCoreData(items.map {$0})
+                viewModel.calculateConcurrentPerformUsingCoreData(items.map {$0})
+            } label: {
+                Text("Calculate All")
+            }
+            .buttonStyle(.automatic)
         }
+
+
     }
 
     private func addItem() {
         withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
+            for _ in 0..<10 {
+                let newItem = Item(context: viewContext)
+                newItem.valueMO = Double.random(in: 0...1.0)
+            }
             do {
                 try viewContext.save()
             } catch {
@@ -72,17 +82,28 @@ struct ContentView: View {
             }
         }
     }
+
+    private var resultsView: some View {
+        VStack(alignment: .leading) {
+            Text("Serial Function with Array \(viewModel.serialUsingArray) ms")
+            Text("Serial Function with Core Data \(viewModel.serialUsingCoreData) ms")
+            Text("Concurrent Perform with Array \(viewModel.concurrentPerformUsingCoreData) ms")
+            Text("Concurrent Perform with Core Data \(viewModel.concurrentPerformUsingArray) ms")
+        }
+    }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
+private let itemFormatter: NumberFormatter = {
+    let formatter = NumberFormatter()
+    formatter.minimumFractionDigits = 3
+    formatter.maximumFractionDigits = 3
     return formatter
 }()
 
 struct ContentView_Previews: PreviewProvider {
+    static let persistenceController: PersistenceController = PersistenceController.preview
     static var previews: some View {
-        ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+        ContentView(persistenceController: persistenceController, viewModel: ViewModel(persistenceController: persistenceController))
+            .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
     }
 }

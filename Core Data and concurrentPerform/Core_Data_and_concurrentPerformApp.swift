@@ -6,14 +6,22 @@
 //
 
 import SwiftUI
+import CoreData
 
 @main
 struct Core_Data_and_concurrentPerformApp: App {
-    let persistenceController = PersistenceController.shared
+    @State var persistenceController: PersistenceController
+    @State var viewModel: ViewModel
+
+    init() {
+        let persistenceController = PersistenceController.shared
+        _persistenceController = State(initialValue: persistenceController)
+        _viewModel = State(initialValue: ViewModel(persistenceController: persistenceController))
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(persistenceController: persistenceController, viewModel: viewModel)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }
