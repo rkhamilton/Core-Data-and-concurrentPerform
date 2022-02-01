@@ -25,62 +25,59 @@ struct ContentView: View {
     }
 
     var body: some View {
-         ScrollView {
-            List {
-                ForEach(items) { item in
-                    Text("\(item.valueMO, specifier: "%.2f")")
+        ScrollView {
+            Text("This app tests the performance of structs and core data managed objects within a hot inner loop that is calculating pi. This example runs the same algorithm with one of two internal data structures: a struct with a double attribute, and a core data NSManagedObject with a double attribute. It also runs in either a simple serial queue, or in parallel using concurrentPerform. I find here that using the Core Data object takes 30-fold longer than using the struct.")
+                .font(.footnote)
+                .padding()
+
+            Text("Does an item exist in the store? If not add one.")
+            if let value = items.first?.valueMO {
+                Text("Item: \(value, specifier: "%.2f")")
+            } else {
+                VStack {
+                    Text("Add an item")
+                    Button(role: .none) {
+                        addItem()
+                    } label: {
+                        Text("Add Item to Core Data store")
+                    }
+                    .buttonStyle(.automatic)
                 }
-                .onDelete(perform: deleteItems)
             }
-            .frame(width: 300, height: 100, alignment: .leading)
-            .padding()
             resultsView
                 .padding()
-            Button(role: .none) {
-                addItem()
-            } label: {
-                Text("Add 10 Items to Calculate")
+            VStack(alignment: .leading) {
+                Text("Calculation Methods")
+                Button(role: .none) {
+                    viewModel.calculateSerialUsingDouble(items.first!)
+                } label: {
+                    Text("Serial Struct")
+                }
+                .buttonStyle(.automatic)
+                .padding()
+                Button(role: .none) {
+                    viewModel.calculateConcurrentPerformUsingDouble(items.first!)
+                } label: {
+                    Text("concurrentPerform Struct")
+                }
+                .buttonStyle(.automatic)
+                .padding()
+                Button(role: .none) {
+                    viewModel.calculateSerialUsingCoreData(items.first!)
+                } label: {
+                    Text("Serial Core Data")
+                }
+                .buttonStyle(.automatic)
+                .padding()
+                Button(role: .none) {
+                    viewModel.calculateConcurrentPerformUsingCoreData(items.first!)
+                } label: {
+                    Text("concurrentPerform Core Data")
+                }
+                .buttonStyle(.automatic)
+                .padding()
             }
-            .buttonStyle(.automatic)
-            .padding()
-            Button(role: .none) {
-                viewModel.calculateSerialUsingDouble(items.first!)
-            } label: {
-                Text("calculateSerialUsingDouble")
-            }
-            .buttonStyle(.automatic)
-            .padding()
-             Button(role: .none) {
-                 viewModel.calculateConcurrentPerformUsingDouble(items.first!)
-             } label: {
-                 Text("calculateConcurrentPerformUsingDouble")
-             }
-             .buttonStyle(.automatic)
-             .padding()
-             Button(role: .none) {
-                 viewModel.calculateSerialUsingCoreData(items.first!)
-             } label: {
-                 Text("calculateSerialUsingCoreData")
-             }
-             .buttonStyle(.automatic)
-             .padding()
-             Button(role: .none) {
-                 viewModel.calculateConcurrentPerformUsingCoreData(items.first!)
-             } label: {
-                 Text("calculateConcurrentPerformUsingCoreData")
-             }
-             .buttonStyle(.automatic)
-             .padding()
-             Button(role: .none) {
-                 viewModel.calculateSerialUsingDouble(items.first!)
-                 viewModel.calculateConcurrentPerformUsingDouble(items.first!)
-                 viewModel.calculateSerialUsingCoreData(items.first!)
-                 viewModel.calculateConcurrentPerformUsingCoreData(items.first!)
-             } label: {
-                 Text("Calculate All at Once")
-             }
-             .buttonStyle(.automatic)
-             .padding()
+
         }
 
 
@@ -88,10 +85,8 @@ struct ContentView: View {
 
     private func addItem() {
         withAnimation {
-            for _ in 0..<10 {
-                let newItem = Item(context: viewContext)
-                newItem.valueMO = Double.random(in: 0...1.0)
-            }
+            let newItem = Item(context: viewContext)
+            newItem.valueMO = Double.random(in: 0...1.0)
             do {
                 try viewContext.save()
             } catch {
@@ -120,10 +115,11 @@ struct ContentView: View {
 
     private var resultsView: some View {
         VStack(alignment: .leading) {
-            Text("Serial Double \(viewModel.serialUsingDouble) ms \(viewModel.serialUsingDoubleValue)")
-            Text("Serial Core Data \(viewModel.serialUsingCoreData) ms \(viewModel.serialUsingCoreDataValue)")
-            Text("Concurrent Double \(viewModel.concurrentPerformUsingDouble) ms \(viewModel.concurrentPerformUsingDoubleValue)")
-            Text("Concurrent Core Data \(viewModel.concurrentPerformUsingCoreData) ms \(viewModel.concurrentPerformUsingCoreDataValue)")
+            Text("Results").bold()
+            Text("Serial Struct \(viewModel.serialUsingDouble) ms Pi: \(viewModel.serialUsingDoubleValue)")
+            Text("Concurrent Struct \(viewModel.concurrentPerformUsingDouble) ms Pi: \(viewModel.concurrentPerformUsingDoubleValue)")
+            Text("Serial Core Data \(viewModel.serialUsingCoreData) ms Pi: \(viewModel.serialUsingCoreDataValue)")
+            Text("Concurrent Core Data \(viewModel.concurrentPerformUsingCoreData) ms Pi: \(viewModel.concurrentPerformUsingCoreDataValue)")
             
         }
     }

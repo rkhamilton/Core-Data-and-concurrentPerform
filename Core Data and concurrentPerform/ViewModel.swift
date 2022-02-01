@@ -37,14 +37,15 @@ final class ViewModel: ObservableObject {
         self.concurrentPerformUsingDoubleValue = 0
     }
 
-    func calculateSerialUsingCoreData(_ item: Item) {
+    func calculateSerialUsingCoreData(_ sourceItem: Item) {
         let startTime = CFAbsoluteTimeGetCurrent()
         var result: Double = 0
         for _ in 0..<numberOfOuterLoopIterations {
             // create copy of the sourceItem in a childContext so we don't mutate the original
-            let childContext = persistenceController.container.newBackgroundContext()
-            childContext.performAndWait {
-                let childObject: Item = try! childContext.existingObject(with: item.objectID) as! Item
+
+            let backgroundContext = persistenceController.container.newBackgroundContext()
+            backgroundContext.performAndWait {
+                let childObject: Item = try! backgroundContext.existingObject(with: sourceItem.objectID) as! Item
                 result = calculatePi(item: childObject)
             }
         }
@@ -97,15 +98,10 @@ final class ViewModel: ObservableObject {
             DispatchQueue.concurrentPerform(iterations: self.numberOfOuterLoopIterations) { index in
                 // create copy of the sourceItem in a childContext so we don't mutate the original
                 let sourceItem: Item = item
-                guard let parentContext = sourceItem.managedObjectContext else {
-                    // we shouldn't be passing a managed object without a context to this init...
-                    fatalError("Attempting to edit a managed object that's not associated with a context")
-                }
 
-                let childContext = self.persistenceController.container.newBackgroundContext()
-
-                childContext.performAndWait {
-                    guard let childObject = try? childContext.existingObject(with: sourceItem.objectID) as? Item else {
+                let backgroundContext = self.persistenceController.container.newBackgroundContext()
+                backgroundContext.performAndWait {
+                    guard let childObject = try? backgroundContext.existingObject(with: sourceItem.objectID) as? Item else {
                         fatalError("Attempting to edit a managed object that's not associated with a context")
                     }
                     result = self.calculatePi(item: childObject)
@@ -120,32 +116,7 @@ final class ViewModel: ObservableObject {
         }
     }
 
-
-
-
-    func timeConsumingWork(inputValue: Double) -> Double {
-        var interimResult: Double = inputValue
-        for _ in 0..<numberOfInnerLoopIterations {
-            interimResult = pow(inputValue,2)
-            interimResult = inputValue + Double.random(in: -1...1)
-            interimResult = inputValue.squareRoot()
-            interimResult = inputValue + Double.random(in: -1...1)
-        }
-        return interimResult
-    }
-
-    func timeConsumingWork(managedObject: Item) -> Double {
-        let interimResult: Item = managedObject
-        for _ in 0..<numberOfInnerLoopIterations {
-            interimResult.valueMO = pow(interimResult.valueMO,2)
-            interimResult.valueMO = interimResult.valueMO + Double.random(in: -1...1)
-            interimResult.valueMO = interimResult.valueMO.squareRoot()
-            interimResult.valueMO = interimResult.valueMO + Double.random(in: -1...1)
-        }
-        return interimResult.valueMO
-    }
-
-
+    // This function uses a struct property for internal storage.
     func calculatePi(structItem: StructItem) -> Double {
         var item = structItem
         item.valueMO = 0.0
@@ -158,6 +129,8 @@ final class ViewModel: ObservableObject {
         return item.valueMO
     }
 
+    // This function uses a NSManagedObject for its internal calculations.
+    // It takes 30x longer to run this function that the one using a struct.
     func calculatePi(item: Item) -> Double {
         item.valueMO = 0.0
         var sign = 1.0
