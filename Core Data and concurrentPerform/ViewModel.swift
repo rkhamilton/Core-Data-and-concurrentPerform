@@ -10,24 +10,25 @@ import CoreData
 
 final class ViewModel: ObservableObject {
     private let persistenceController: PersistenceController
-    private let numberOfIterationsForWork: Int = 10000
+    private let numberOfInnerLoopIterations: Int = 100000
+    private let numberOfOuterLoopIterations: Int = 20
 
     @Published var serialUsingCoreData: Int
-    @Published var serialUsingArray: Int
+    @Published var serialUsingDouble: Int
     @Published var concurrentPerformUsingCoreData: Int
-    @Published var concurrentPerformUsingArray: Int
+    @Published var concurrentPerformUsingDouble: Int
 
     init(persistenceController: PersistenceController) {
         self.persistenceController = persistenceController
         self.serialUsingCoreData = 0
-        self.serialUsingArray = 0
+        self.serialUsingDouble = 0
         self.concurrentPerformUsingCoreData = 0
-        self.concurrentPerformUsingArray = 0
+        self.concurrentPerformUsingDouble = 0
     }
 
-    func calculateSerialUsingCoreData(_ items: [Item]) {
+    func calculateSerialUsingCoreData(_ item: Item) {
         let startTime = CFAbsoluteTimeGetCurrent()
-        for item in items {
+        for _ in 0..<numberOfOuterLoopIterations {
             // create copy of the sourceItem in a childContext so we don't mutate the original
             let parentContext = item.managedObjectContext
             let childContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -36,67 +37,78 @@ final class ViewModel: ObservableObject {
 
             _ = timeConsumingWork(managedObject: childObject)
         }
-        serialUsingCoreData = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
-        print("serialUsingCoreData: \(serialUsingCoreData)")
+        let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
+        serialUsingCoreData = elapsedTime
+        print("serialUsingCoreData: \(elapsedTime)")
     }
 
-    func calculateSerialUsingArray(_ items: [Item]) {
-        let itemsAsDoubles: [Double] = items.map {$0.valueMO}
+    func calculateSerialUsingDouble(_ item: Item) {
+        let itemAsDoubles: Double = item.valueMO
         let startTime = CFAbsoluteTimeGetCurrent()
-        for item in itemsAsDoubles {
-            _ = timeConsumingWork(inputValue: item)
+        for _ in 0..<numberOfOuterLoopIterations {
+            _ = timeConsumingWork(inputValue: itemAsDoubles)
         }
-        serialUsingArray = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
-        print("serialUsingArray: \(serialUsingArray)")
+        let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
+        serialUsingDouble = elapsedTime
+        print("serialUsingArray: \(elapsedTime)")
     }
 
-    func calculateConcurrentPerformUsingCoreData(_ items: [Item]) {
+    func calculateConcurrentPerformUsingDouble(_ item: Item) {
+        let itemAsDoubles: Double = item.valueMO
         let startTime = CFAbsoluteTimeGetCurrent()
 
-        DispatchQueue.concurrentPerform(iterations: items.count-1) { index in
-            // create copy of the sourceItem in a childContext so we don't mutate the original
-            let sourceItem: Item = items[index]
-            guard let parentContext = sourceItem.managedObjectContext else {
-                // we shouldn't be passing a managed object without a context to this init...
-                fatalError("Attempting to edit a managed object that's not associated with a context")
+        let concurrentQueue = DispatchQueue.init(label: "ConcurrentPerformUsingArray", qos: .userInitiated, attributes: .concurrent)
+
+        concurrentQueue.sync {
+            DispatchQueue.concurrentPerform(iterations: self.numberOfOuterLoopIterations) { index in
+                _ = self.timeConsumingWork(inputValue: itemAsDoubles)
             }
-
-            let childContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-            childContext.parent = parentContext
-
-            childContext.performAndWait {
-                guard let childObject = try? childContext.existingObject(with: sourceItem.objectID) as? Item else {
-                    fatalError("Attempting to edit a managed object that's not associated with a context")
-                }
-                _ = timeConsumingWork(managedObject: childObject)
+            DispatchQueue.main.async {
+                let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
+                self.concurrentPerformUsingDouble = elapsedTime
+                print("concurrentPerformUsingDouble: \(elapsedTime)")
             }
         }
-        concurrentPerformUsingCoreData = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
-        print("concurrentPerformUsingCoreData: \(concurrentPerformUsingCoreData)")
     }
 
-    func calculateConcurrentPerformUsingArray(_ items: [Item]) {
-        let itemsAsDoubles: [Double] = items.map {$0.valueMO}
+    func calculateConcurrentPerformUsingCoreData(_ item: Item) {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         let concurrentQueue = DispatchQueue.init(label: "ConcurrentPerformUsingArray", qos: .userInitiated, attributes: .concurrent)
 
         concurrentQueue.async {
-            DispatchQueue.concurrentPerform(iterations: itemsAsDoubles.count) { index in
-                _ = self.timeConsumingWork(inputValue: itemsAsDoubles[index])
-            }
+            DispatchQueue.concurrentPerform(iterations: self.numberOfOuterLoopIterations) { index in
+                // create copy of the sourceItem in a childContext so we don't mutate the original
+                let sourceItem: Item = item
+                guard let parentContext = sourceItem.managedObjectContext else {
+                    // we shouldn't be passing a managed object without a context to this init...
+                    fatalError("Attempting to edit a managed object that's not associated with a context")
+                }
 
+                let childContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+                childContext.parent = parentContext
+
+                childContext.performAndWait {
+                    guard let childObject = try? childContext.existingObject(with: sourceItem.objectID) as? Item else {
+                        fatalError("Attempting to edit a managed object that's not associated with a context")
+                    }
+                    _ = self.timeConsumingWork(managedObject: childObject)
+                }
+            }
             DispatchQueue.main.async {
-                self.concurrentPerformUsingArray = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
-                print("concurrentPerformUsingArray: \(self.concurrentPerformUsingArray)")
+                let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
+                self.concurrentPerformUsingCoreData = elapsedTime
+                print("concurrentPerformUsingCoreData: \(elapsedTime)")
             }
         }
     }
 
 
+
+
     func timeConsumingWork(inputValue: Double) -> Double {
         var interimResult: Double = inputValue
-        for _ in 0..<numberOfIterationsForWork {
+        for _ in 0..<numberOfInnerLoopIterations {
             interimResult = pow(inputValue,2)
             interimResult = inputValue + Double.random(in: -1...1)
             interimResult = inputValue.squareRoot()
@@ -107,7 +119,7 @@ final class ViewModel: ObservableObject {
 
     func timeConsumingWork(managedObject: Item) -> Double {
         let interimResult: Item = managedObject
-        for _ in 0..<numberOfIterationsForWork {
+        for _ in 0..<numberOfInnerLoopIterations {
             interimResult.valueMO = pow(interimResult.valueMO,2)
             interimResult.valueMO = interimResult.valueMO + Double.random(in: -1...1)
             interimResult.valueMO = interimResult.valueMO.squareRoot()
@@ -115,5 +127,6 @@ final class ViewModel: ObservableObject {
         }
         return interimResult.valueMO
     }
+
 }
 

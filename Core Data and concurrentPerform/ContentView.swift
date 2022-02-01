@@ -13,10 +13,16 @@ struct ContentView: View {
     let persistenceController: PersistenceController
     @ObservedObject var viewModel: ViewModel
 
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.valueMO, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
+    @FetchRequest var items: FetchedResults<Item>
+
+    init(persistenceController: PersistenceController, viewModel: ViewModel) {
+        self.persistenceController = persistenceController
+        self.viewModel = viewModel
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        request.fetchLimit = 1
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Item.valueMO, ascending: true)]
+        _items = FetchRequest(fetchRequest: request)
+    }
 
     var body: some View {
          ScrollView {
@@ -26,7 +32,7 @@ struct ContentView: View {
                 }
                 .onDelete(perform: deleteItems)
             }
-            .frame(width: 300, height: 300, alignment: .leading)
+            .frame(width: 300, height: 100, alignment: .leading)
             .padding()
             resultsView
                 .padding()
@@ -38,14 +44,43 @@ struct ContentView: View {
             .buttonStyle(.automatic)
             .padding()
             Button(role: .none) {
-                viewModel.calculateSerialUsingArray(items.map {$0})
-                viewModel.calculateConcurrentPerformUsingArray(items.map {$0})
-                viewModel.calculateSerialUsingCoreData(items.map {$0})
-//                viewModel.calculateConcurrentPerformUsingCoreData(items.map {$0})
+                viewModel.calculateSerialUsingDouble(items.first!)
             } label: {
-                Text("Calculate All")
+                Text("calculateSerialUsingDouble")
             }
             .buttonStyle(.automatic)
+            .padding()
+             Button(role: .none) {
+                 viewModel.calculateConcurrentPerformUsingDouble(items.first!)
+             } label: {
+                 Text("calculateConcurrentPerformUsingDouble")
+             }
+             .buttonStyle(.automatic)
+             .padding()
+             Button(role: .none) {
+                 viewModel.calculateSerialUsingCoreData(items.first!)
+             } label: {
+                 Text("calculateSerialUsingCoreData")
+             }
+             .buttonStyle(.automatic)
+             .padding()
+             Button(role: .none) {
+                 viewModel.calculateConcurrentPerformUsingCoreData(items.first!)
+             } label: {
+                 Text("calculateConcurrentPerformUsingCoreData")
+             }
+             .buttonStyle(.automatic)
+             .padding()
+             Button(role: .none) {
+                 viewModel.calculateSerialUsingDouble(items.first!)
+                 viewModel.calculateConcurrentPerformUsingDouble(items.first!)
+                 viewModel.calculateSerialUsingCoreData(items.first!)
+                 viewModel.calculateConcurrentPerformUsingCoreData(items.first!)
+             } label: {
+                 Text("Calculate All at Once")
+             }
+             .buttonStyle(.automatic)
+             .padding()
         }
 
 
@@ -85,9 +120,9 @@ struct ContentView: View {
 
     private var resultsView: some View {
         VStack(alignment: .leading) {
-            Text("Serial Function with Array \(viewModel.serialUsingArray) ms")
+            Text("Serial Function with Double \(viewModel.serialUsingDouble) ms")
             Text("Serial Function with Core Data \(viewModel.serialUsingCoreData) ms")
-            Text("Concurrent Perform with Array \(viewModel.concurrentPerformUsingArray) ms")
+            Text("Concurrent Perform with Double \(viewModel.concurrentPerformUsingDouble) ms")
             Text("Concurrent Perform with Core Data \(viewModel.concurrentPerformUsingCoreData) ms")
         }
     }
