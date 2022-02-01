@@ -3,6 +3,7 @@
 This app is an exploration of how to best use Core Data NSManagedObjects in high performance numerical code. I want to explore the performance of a NSManagedObject with a double attribute in a hot loop, as compared to using a struct with a double attribute.
 
 In this test my "hot loop" is calculating the digits of Pi using the Gregory-Leibniz series. I'm running 5M iterations per calculation, and repeating each calculation 200 times per condition. The final value of pi for the 200th iteration is shown on screen.
+
 <img src="./screenshot.png" width="400px"></img>
 
 I find that using a NSManagedObject for the inner loop results in 25-30 fold slower performance compared to a struct. I'd be very interested in any ideas for ways to mitigate this performance impact.
