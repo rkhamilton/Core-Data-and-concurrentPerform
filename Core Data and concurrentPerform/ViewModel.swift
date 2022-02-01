@@ -10,8 +10,8 @@ import CoreData
 
 final class ViewModel: ObservableObject {
     private let persistenceController: PersistenceController
-    private let numberOfInnerLoopIterations: Int = 5_000_000
-    private let numberOfOuterLoopIterations: Int = 100
+    private let numberOfInnerLoopIterations: Int = 5_000_00
+    private let numberOfOuterLoopIterations: Int = 200
 
     @Published var serialUsingCoreData: Int
     @Published var serialUsingDouble: Int
@@ -42,12 +42,11 @@ final class ViewModel: ObservableObject {
         var result: Double = 0
         for _ in 0..<numberOfOuterLoopIterations {
             // create copy of the sourceItem in a childContext so we don't mutate the original
-            let parentContext = item.managedObjectContext
-            let childContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-            childContext.parent = parentContext
-            let childObject: Item = try! childContext.existingObject(with: item.objectID) as! Item
-
-            result = calculatePi(item: childObject)
+            let childContext = persistenceController.container.newBackgroundContext()
+            childContext.performAndWait {
+                let childObject: Item = try! childContext.existingObject(with: item.objectID) as! Item
+                result = calculatePi(item: childObject)
+            }
         }
         let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
         serialUsingCoreData = elapsedTime
@@ -103,8 +102,7 @@ final class ViewModel: ObservableObject {
                     fatalError("Attempting to edit a managed object that's not associated with a context")
                 }
 
-                let childContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-                childContext.parent = parentContext
+                let childContext = self.persistenceController.container.newBackgroundContext()
 
                 childContext.performAndWait {
                     guard let childObject = try? childContext.existingObject(with: sourceItem.objectID) as? Item else {
