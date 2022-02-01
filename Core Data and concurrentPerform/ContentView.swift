@@ -41,7 +41,7 @@ struct ContentView: View {
                 viewModel.calculateSerialUsingArray(items.map {$0})
                 viewModel.calculateConcurrentPerformUsingArray(items.map {$0})
                 viewModel.calculateSerialUsingCoreData(items.map {$0})
-                viewModel.calculateConcurrentPerformUsingCoreData(items.map {$0})
+//                viewModel.calculateConcurrentPerformUsingCoreData(items.map {$0})
             } label: {
                 Text("Calculate All")
             }
@@ -87,8 +87,8 @@ struct ContentView: View {
         VStack(alignment: .leading) {
             Text("Serial Function with Array \(viewModel.serialUsingArray) ms")
             Text("Serial Function with Core Data \(viewModel.serialUsingCoreData) ms")
-            Text("Concurrent Perform with Array \(viewModel.concurrentPerformUsingCoreData) ms")
-            Text("Concurrent Perform with Core Data \(viewModel.concurrentPerformUsingArray) ms")
+            Text("Concurrent Perform with Array \(viewModel.concurrentPerformUsingArray) ms")
+            Text("Concurrent Perform with Core Data \(viewModel.concurrentPerformUsingCoreData) ms")
         }
     }
 }

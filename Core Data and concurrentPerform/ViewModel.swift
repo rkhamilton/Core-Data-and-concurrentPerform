@@ -10,7 +10,7 @@ import CoreData
 
 final class ViewModel: ObservableObject {
     private let persistenceController: PersistenceController
-    private let numberOfIterationsForWork: Int = 50
+    private let numberOfIterationsForWork: Int = 10000
 
     @Published var serialUsingCoreData: Int
     @Published var serialUsingArray: Int
@@ -79,11 +79,18 @@ final class ViewModel: ObservableObject {
         let itemsAsDoubles: [Double] = items.map {$0.valueMO}
         let startTime = CFAbsoluteTimeGetCurrent()
 
-        DispatchQueue.concurrentPerform(iterations: items.count) { index in
-            _ = timeConsumingWork(inputValue: itemsAsDoubles[index])
+        let concurrentQueue = DispatchQueue.init(label: "ConcurrentPerformUsingArray", qos: .userInitiated, attributes: .concurrent)
+
+        concurrentQueue.async {
+            DispatchQueue.concurrentPerform(iterations: itemsAsDoubles.count) { index in
+                _ = self.timeConsumingWork(inputValue: itemsAsDoubles[index])
+            }
+
+            DispatchQueue.main.async {
+                self.concurrentPerformUsingArray = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
+                print("concurrentPerformUsingArray: \(self.concurrentPerformUsingArray)")
+            }
         }
-        concurrentPerformUsingArray = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
-        print("concurrentPerformUsingArray: \(concurrentPerformUsingArray)")
     }
 
 
