@@ -13,6 +13,8 @@ struct ContentView: View {
     let persistenceController: PersistenceController
     @ObservedObject var viewModel: ViewModel
 
+    @State var dataExists: Bool = false
+
     @FetchRequest var items: FetchedResults<Item>
 
     init(persistenceController: PersistenceController, viewModel: ViewModel) {
@@ -22,6 +24,7 @@ struct ContentView: View {
         request.fetchLimit = 1
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Item.valueMO, ascending: true)]
         _items = FetchRequest(fetchRequest: request)
+        _dataExists = State(initialValue: items.count > 0)
     }
 
     var body: some View {
@@ -31,13 +34,14 @@ struct ContentView: View {
                 .padding()
 
             Text("Does an item exist in the store? If not add one.")
-            if let value = items.first?.valueMO {
-                Text("Item: \(value, specifier: "%.2f")")
+            if dataExists  {
+                Text("Item: \(items.first!.valueMO, specifier: "%.2f")")
             } else {
                 VStack {
                     Text("Add an item")
                     Button(role: .none) {
                         addItem()
+                        dataExists = true
                     } label: {
                         Text("Add Item to Core Data store")
                     }
@@ -77,6 +81,7 @@ struct ContentView: View {
                 .buttonStyle(.automatic)
                 .padding()
             }
+            .disabled(!dataExists)
 
         }
 
