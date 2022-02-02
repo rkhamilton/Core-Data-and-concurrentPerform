@@ -56,11 +56,10 @@ final class ViewModel: ObservableObject {
     }
 
     func calculateSerialUsingDouble(_ item: Item) {
-        let itemAsDoubles: Double = item.valueMO
         var result: Double = 0
         let startTime = CFAbsoluteTimeGetCurrent()
         for _ in 0..<numberOfOuterLoopIterations {
-            result = calculatePi(structItem: StructItem(valueMO: itemAsDoubles))
+            result = calculatePi(structItem: StructItem(valueMO: item.valueMO))
         }
         let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
         serialUsingDouble = elapsedTime
@@ -69,7 +68,6 @@ final class ViewModel: ObservableObject {
     }
 
     func calculateConcurrentPerformUsingDouble(_ item: Item) {
-        let itemAsDoubles: Double = item.valueMO
         var result: Double = 0
         let startTime = CFAbsoluteTimeGetCurrent()
 
@@ -77,7 +75,7 @@ final class ViewModel: ObservableObject {
 
         concurrentQueue.sync {
             DispatchQueue.concurrentPerform(iterations: self.numberOfOuterLoopIterations) { index in
-                result = self.calculatePi(structItem: StructItem(valueMO: itemAsDoubles))
+                result = self.calculatePi(structItem: StructItem(valueMO: item.valueMO))
             }
             DispatchQueue.main.async {
                 let elapsedTime = Int((CFAbsoluteTimeGetCurrent() - startTime)*1000)
