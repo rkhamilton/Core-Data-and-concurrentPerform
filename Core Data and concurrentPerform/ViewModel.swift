@@ -39,19 +39,31 @@ final class ViewModel: ObservableObject {
     }
 
     func calculateSerialUsingCoreData(_ sourceItem: Item) {
-        (serialUsingCoreData, serialUsingCoreDataValue) = ConcurrentCalculator.calculateSerialUsingCoreData(sourceItem, persistenceController: self.persistenceController)
+        Task {
+            async let calculationResult = ConcurrentCalculator.calculateSerialUsingCoreData(sourceItem, persistenceController: self.persistenceController)
+            (serialUsingCoreData, serialUsingCoreDataValue) = await calculationResult
+        }
     }
 
     func calculateSerialUsingDouble(_ sourceItem: Item) {
-        (serialUsingDouble, serialUsingDoubleValue) = ConcurrentCalculator.calculateSerialUsingDouble(sourceItem)
+        Task {
+            async let calculationResult = ConcurrentCalculator.calculateSerialUsingDouble(sourceItem)
+            (serialUsingDouble, serialUsingDoubleValue) = await calculationResult
+        }
     }
 
     func calculateConcurrentPerformUsingDouble(_ sourceItem: Item) {
-        (concurrentPerformUsingDouble, concurrentPerformUsingDoubleValue) = ConcurrentCalculator.calculateConcurrentPerformUsingDouble(sourceItem)
+        Task {
+            async let calculationResult = ConcurrentCalculator.calculateConcurrentPerformUsingDouble(sourceItem)
+            (concurrentPerformUsingDouble, concurrentPerformUsingDoubleValue) = await calculationResult
+        }
     }
 
     func calculateConcurrentPerformUsingCoreData(_ sourceItem: Item) {
-        (concurrentPerformUsingCoreData, concurrentPerformUsingCoreDataValue) = ConcurrentCalculator.calculateConcurrentPerformUsingCoreData(sourceItem, persistenceController: self.persistenceController)
+        Task {
+            async let calculationResult = ConcurrentCalculator.calculateConcurrentPerformUsingCoreData(sourceItem, persistenceController: self.persistenceController)
+            (concurrentPerformUsingCoreData, concurrentPerformUsingCoreDataValue) = await calculationResult
+        }
     }
 }
 
