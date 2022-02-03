@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		944BDCCA27AC23FA003CE972 /* ConcurrentCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944BDCC927AC23FA003CE972 /* ConcurrentCalculator.swift */; };
 		9484E17D27A8CAEC00F2D3D6 /* Core_Data_and_concurrentPerformApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9484E17C27A8CAEC00F2D3D6 /* Core_Data_and_concurrentPerformApp.swift */; };
 		9484E17F27A8CAEC00F2D3D6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9484E17E27A8CAEC00F2D3D6 /* ContentView.swift */; };
 		9484E18127A8CAED00F2D3D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9484E18027A8CAED00F2D3D6 /* Assets.xcassets */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		944BDCC927AC23FA003CE972 /* ConcurrentCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcurrentCalculator.swift; sourceTree = "<group>"; };
 		9484E17927A8CAEC00F2D3D6 /* Core Data and concurrentPerform.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Core Data and concurrentPerform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9484E17C27A8CAEC00F2D3D6 /* Core_Data_and_concurrentPerformApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core_Data_and_concurrentPerformApp.swift; sourceTree = "<group>"; };
 		9484E17E27A8CAEC00F2D3D6 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				9484E18027A8CAED00F2D3D6 /* Assets.xcassets */,
 				9484E18527A8CAED00F2D3D6 /* Persistence.swift */,
 				9484E18F27A8CDA400F2D3D6 /* ViewModel.swift */,
+				944BDCC927AC23FA003CE972 /* ConcurrentCalculator.swift */,
 				9484E18727A8CAED00F2D3D6 /* Core_Data_and_concurrentPerform.xcdatamodeld */,
 				9484E18227A8CAED00F2D3D6 /* Preview Content */,
 			);
@@ -149,6 +152,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9484E19027A8CDA500F2D3D6 /* ViewModel.swift in Sources */,
+				944BDCCA27AC23FA003CE972 /* ConcurrentCalculator.swift in Sources */,
 				9484E18627A8CAED00F2D3D6 /* Persistence.swift in Sources */,
 				9484E18927A8CAED00F2D3D6 /* Core_Data_and_concurrentPerform.xcdatamodeld in Sources */,
 				9484E17F27A8CAEC00F2D3D6 /* ContentView.swift in Sources */,
